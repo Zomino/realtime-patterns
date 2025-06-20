@@ -1,0 +1,17 @@
+{
+  "name": "realtime-patterns",
+  "version": "1.0.0",
+  "description": "A collection of real-time communication patterns in MERN apps.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "private": true,
+  "workspaces": [
+    "polling/*",
+    "boilerplate/*"
+  ]
+}
