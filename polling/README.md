@@ -9,9 +9,12 @@
 sequenceDiagram
     participant Client
     participant Server
+    participant Database
 
     loop Every N seconds
         Client->>Server: Poll for new messages
+        Server->>Database: Fetch messages
+        Database-->>Server: Return messages
         Server-->>Client: Respond with messages
         alt New messages available
             Client->>Client: Update UI with new messages
