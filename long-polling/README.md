@@ -3,7 +3,7 @@
 ## How It Works
 
 - The client sends and receives messages via HTTP requests.
-- The client uses long-polling: it opens a request to the server and waits for new messages or a timeout.
+- The client opens a request to the server and waits for new messages or a timeout.
 - The server responds immediately if there are new messages, or holds the request open until new data becomes available or a timeout occurs.
 - The server itself polls the database for new messages.
 - Messages are stored in the database.
@@ -35,9 +35,8 @@ sequenceDiagram
 
 ## Pros
 
-- **Easy to implement:** Requires minimal changes to existing client-server setups.
+- **Less initial time investment:** Requires no new architecture or technology.
 - **Broad compatibility:** Works in all browsers and environments since it relies on standard HTTP requests.
-- **No special infrastructure needed:** Does not require WebSockets or persistent connections.
 - **Reduces database load compared to client polling:** Because the server manages polling for new data, the amount of database queries is tied to the number of server nodes, not the number of users.
 
 ## Cons

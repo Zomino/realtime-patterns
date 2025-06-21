@@ -25,7 +25,6 @@ sequenceDiagram
 ```
 
 ## Pros
-- **Easy to implement:** Requires minimal changes to existing client-server setups.
 - **Broad compatibility:** Works in all browsers and environments since it relies on standard HTTP requests.
 - **No special infrastructure needed:** Does not require WebSockets or persistent connections.
 
