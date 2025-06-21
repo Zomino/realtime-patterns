@@ -11,6 +11,8 @@ function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // In production, this would be probably be abstracted into a custom hook or service.
+  // We would probably need to have all events (i.e., not just messages) fetched in a single setTimeout, to avoid overloading the server.
   useEffect(() => {
     const fetchMessages = () => {
       return fetch("http://localhost:3000/messages")
