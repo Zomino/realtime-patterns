@@ -11,7 +11,8 @@
   "license": "ISC",
   "private": true,
   "workspaces": [
-    "polling/*",
-    "boilerplate/*"
+    "boilerplate/*",
+    "long-polling/*",
+    "polling/*"
   ]
 }
