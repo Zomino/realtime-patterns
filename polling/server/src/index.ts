@@ -24,6 +24,7 @@ interface Message {
 const messages: Message[] = [];
 
 app.get("/messages", (req, res) => {
+  // In production, we would implement pagination or filtering based on query parameters and the logged-in user.
   res.json({ messages });
 });
 
