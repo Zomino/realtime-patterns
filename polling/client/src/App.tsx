@@ -13,6 +13,7 @@ function App() {
 
   // In production, this would be probably be abstracted into a custom hook or service.
   // We would probably need to have all events (i.e., not just messages) fetched in a single setTimeout, to avoid overloading the server.
+  // We would also need to be careful, as this function will become complex and a single point of failure.
   useEffect(() => {
     const fetchMessages = () => {
       return fetch("http://localhost:3000/messages")

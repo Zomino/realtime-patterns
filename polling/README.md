@@ -32,4 +32,4 @@ sequenceDiagram
 ## Cons
 - **Inefficient resource usage:** Most polling requests may return no new data, leading to wasted bandwidth and unnecessary server processing.
 - **Not truly real-time:** Clients only receive updates at fixed intervals, introducing latency between data changes and client updates.
-- **Scalability challenges:** High numbers of clients polling frequently can overload the server, and it’s difficult to balance different update frequencies for various types of data.
+- **Scalability challenges:** High numbers of clients polling frequently can overload the server, and it’s difficult to balance loose coupling of frontend components and resource efficiency.
