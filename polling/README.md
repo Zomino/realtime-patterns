@@ -16,7 +16,7 @@ sequenceDiagram
         alt New messages available
             Client->>Client: Update UI with new messages
         else No new messages
-            No UI update
+            Note right of Client: No UI update
         end
     end
 ```
