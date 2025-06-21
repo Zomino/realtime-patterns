@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const POLLING_INTERVAL = 5000;
+const RETRY_INTERVAL = 5000;
 
 interface Message {
   text: string;
@@ -14,18 +14,27 @@ function App() {
   // In production, this would be probably be abstracted into a custom hook or service.
   // We would probably need to have all events (i.e., not just messages) fetched in a single setTimeout, to avoid overloading the server.
   useEffect(() => {
+    let timeout: NodeJS.Timeout | null = null;
+
     const fetchMessages = () => {
       return fetch("http://localhost:3000/messages")
         .then((res) => res.json())
-        .then((data) => setMessages(data.messages))
-        .catch((err) => console.error("Polling error:", err));
+        .then((data) => {
+          setMessages(data.messages);
+          setTimeout(fetchMessages, RETRY_INTERVAL); // Immediately schedule the next fetch
+        })
+        .catch((err) => {
+          console.error("Polling error:", err);
+          console.log("Retrying in 5 seconds...");
+          timeout = setTimeout(fetchMessages, RETRY_INTERVAL); // Schedule the next fetch
+        });
     };
 
     fetchMessages(); // Initial fetch
 
-    const interval = setInterval(fetchMessages, POLLING_INTERVAL);
-
-    return () => clearInterval(interval);
+    return () => {
+      if (timeout) clearTimeout(timeout); // Clear the timeout on unmount
+    };
   }, []);
 
   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +53,7 @@ function App() {
 
   return (
     <main>
-      <h1>Polling Demo</h1>
+      <h1>Long-Polling Demo</h1>
       <form onSubmit={sendMessage}>
         <input
           type="text"
