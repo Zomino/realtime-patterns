@@ -24,7 +24,7 @@ sequenceDiagram
 
         alt New messages available
             Server-->>Client: Respond with messages
-            Client->>>Client: Update UI with new messages
+            Client->>Client: Update UI with new messages
         else No new messages
             Server-->>Client: Respond with empty array
             Note right of Client: No UI update
