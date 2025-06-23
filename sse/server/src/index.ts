@@ -4,7 +4,6 @@ import express from "express";
 
 dotenv.config();
 
-const LONG_POLL_TIMEOUT = 25000;
 const POLL_INTERVAL = 5000;
 const PORT = process.env.PORT || 3000;
 
@@ -24,37 +23,39 @@ interface Message {
 
 // In production, this would likely be replaced with a database (likely MongoDB), to allow it to persist across server restarts and in a clustered environment.
 const messages: Message[] = [];
-const waitingClients: Array<{ res: express.Response; timer: NodeJS.Timeout }> =
-  [];
+const sseClients: express.Response[] = [];
+let lastSentTime = new Date().toISOString();
 
 // Global interval to check for new messages and notify all waiting clients.
-// This could easily lead to performance issues or memory leaks in a real-world application, especially with many clients.
 setInterval(() => {
-  if (messages.length > 0 && waitingClients.length > 0) {
-    while (waitingClients.length > 0) {
-      const { res, timer } = waitingClients.shift()!;
-      clearTimeout(timer);
-      res.json({ messages });
-    }
+  const newMessages = messages.filter((msg) => msg.time > lastSentTime);
+
+  if (newMessages.length > 0) {
+    lastSentTime = newMessages[newMessages.length - 1].time; // Update last
+
+    sseClients.forEach((client) => {
+      client.write(`data: ${JSON.stringify(newMessages)}\n\n`);
+    });
   }
 }, POLL_INTERVAL);
 
-app.get("/messages", (req, res) => {
-  // In reality, this would check for new messages.
-  if (messages.length > 0) {
-    res.json({ messages }); // Respond immediately if there are any messages
-    return;
-  }
+app.get("/events", (req, res) => {
+  res.set({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
 
-  // The timeout ensures that dead connections are cleaned up after a certain period, preventing memory leaks.
-  const timer = setTimeout(() => {
-    // Remove this client from waitingClients if still present
-    const idx = waitingClients.findIndex((wc) => wc.res === res);
-    if (idx !== -1) waitingClients.splice(idx, 1);
-    res.json({ messages: [] });
-  }, LONG_POLL_TIMEOUT);
+  res.flushHeaders(); // Ensure headers are sent immediately
 
-  waitingClients.push({ res, timer });
+  res.write(`data: ${JSON.stringify(messages)}\n\n`); // Send initial messages
+
+  sseClients.push(res);
+
+  req.on("close", () => {
+    const index = sseClients.indexOf(res);
+    if (index !== -1) sseClients.splice(index, 1); // Remove client on disconnect
+  });
 });
 
 app.post("/messages", (req, res) => {

@@ -1,11 +1,11 @@
-# Long-Polling
+# Server-Sent Events (SSE) with Server-Side Polling
 
 ## How It Works
 
-- The client sends and receives messages via HTTP requests.
-- The client opens a request to the server and waits for new messages or a timeout.
-- The server responds immediately if there are new messages, or holds the request open until new data becomes available or a timeout occurs.
-- The server itself polls the database for new messages.
+- The client establishes a persistent connection to the server using **Server-Sent Events (SSE)**.
+- The server maintains a list of connected clients.
+- The server polls the database for new messages at a fixed interval.
+- When new messages are found, the server immediately pushes them to all connected SSE clients.
 - Messages are stored in the database.
 
 ```mermaid
@@ -14,34 +14,28 @@ sequenceDiagram
     participant Server
     participant Database
 
+    Client->>Server: Open SSE connection (/events)
     loop Every N seconds
-        Client->>Server: Poll for new messages
-        Server->>Server: Set timeout (T)
-        Note right of Server: Server starts polling DB until timeout or new data
-
-        Server->>Database: Check for new messages
+        Server->>Database: Poll for new messages
         Database-->>Server: Messages or empty
 
         alt New messages available
-            Server-->>Client: Respond with messages
+            Server-->>Client: Push new messages via SSE
             Client->>Client: Update UI with new messages
         else No new messages
-            Server-->>Client: Respond with empty array
             Note right of Client: No UI update
         end
     end
-
 ```
 
 ## Pros
-
-- **Less initial time investment:** Requires no new architecture or technology.
-- **Broad compatibility:** Works in all browsers and environments since it relies on standard HTTP requests.
-- **Reduces database load compared to client polling:** Because the server manages polling for new data, the amount of database queries is tied to the number of server nodes, not the number of users.
+- Real-time updates: Clients receive new messages as soon as the server detects them, without polling from the client.
+- Efficient client connections: Each client maintains a single persistent HTTP connection for updates.
+- Broad compatibility: SSE works in all modern browsers and is simple to implement on the client side.
+- Reduces database load compared to client polling: Only the server polls the database, so query frequency is tied to the number of server nodes, not users.
 
 ## Cons
-
-- **Inefficient resource usage:** Most polling requests may return no new data, leading to wasted bandwidth and unnecessary server processing.
-- **Not truly real-time:** Clients only receive updates at fixed intervals, introducing latency between data changes and client updates.
-- **Memory usage:** Subscribers are kept in memory until notified or timed out.
-- **Scalability challenges:** Improving resource efficiency will increase coupling, while a loosely coupled design will consume more resources.
+- Server polling overhead: The server still polls the database at intervals, which may introduce some latency and unnecessary queries if there are no new messages.
+- Not truly instant: There is a small delay between when a message is added and when clients receive it, depending on the polling interval.
+- Memory usage: The server must keep all SSE client connections open, which can be resource-intensive with many clients.
+- Scalability challenges: In a multi-node environment, each server node must poll the database and manage its own client connections.

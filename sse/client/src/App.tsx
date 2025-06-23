@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-const RETRY_INTERVAL = 5000;
-
 interface Message {
   text: string;
   time: string;
@@ -14,26 +12,20 @@ function App() {
   // In production, this would be probably be abstracted into a custom hook or service.
   // We would probably need to have all events (i.e., not just messages) fetched in a single setTimeout, to avoid overloading the server.
   useEffect(() => {
-    let timeout: NodeJS.Timeout | null = null;
+    const eventSource = new EventSource("http://localhost:3000/events");
 
-    const fetchMessages = () => {
-      return fetch("http://localhost:3000/messages")
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data.messages);
-          setTimeout(fetchMessages, RETRY_INTERVAL); // Immediately schedule the next fetch
-        })
-        .catch((err) => {
-          console.error("Polling error:", err);
-          console.log("Retrying in 5 seconds...");
-          timeout = setTimeout(fetchMessages, RETRY_INTERVAL); // Schedule the next fetch
-        });
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Received SSE data:", data);
+        setMessages((prevMessages) => [...prevMessages, ...data]);
+      } catch (error) {
+        console.error("Error parsing SSE data:", error);
+      }
     };
 
-    fetchMessages(); // Initial fetch
-
     return () => {
-      if (timeout) clearTimeout(timeout); // Clear the timeout on unmount
+      eventSource.close(); // Close the EventSource connection on unmount
     };
   }, []);
 
@@ -53,7 +45,7 @@ function App() {
 
   return (
     <main>
-      <h1>Long-Polling Demo</h1>
+      <h1>SSE Demo</h1>
       <form onSubmit={sendMessage}>
         <input
           type="text"
