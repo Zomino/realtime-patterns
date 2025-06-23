@@ -53,6 +53,8 @@ app.get("/messages", (req, res) => {
     if (idx !== -1) waitingClients.splice(idx, 1);
     res.json({ messages: [] });
   }, LONG_POLL_TIMEOUT);
+
+  waitingClients.push({ res, timer });
 });
 
 app.post("/messages", (req, res) => {
