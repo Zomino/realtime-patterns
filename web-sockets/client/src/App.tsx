@@ -1,39 +1,38 @@
-import { useEffect, useState } from "react";
-
-const RETRY_INTERVAL = 5000;
+import { useEffect, useState, useRef } from "react";
+import { io, Socket } from "socket.io-client";
 
 interface Message {
   text: string;
   time: string;
+  server?: string;
 }
 
 function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const socketRef = useRef<Socket | null>(null);
 
-  // In production, this would be probably be abstracted into a custom hook or service.
-  // We would probably need to have all events (i.e., not just messages) fetched in a single setTimeout, to avoid overloading the server.
   useEffect(() => {
-    let timeout: NodeJS.Timeout | null = null;
+    // Connect to the Socket.IO server
+    const socket = io("http://localhost:3000");
+    socketRef.current = socket;
 
-    const fetchMessages = () => {
-      return fetch("http://localhost:3000/messages")
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data.messages);
-          setTimeout(fetchMessages, RETRY_INTERVAL); // Immediately schedule the next fetch
-        })
-        .catch((err) => {
-          console.error("Polling error:", err);
-          console.log("Retrying in 5 seconds...");
-          timeout = setTimeout(fetchMessages, RETRY_INTERVAL); // Schedule the next fetch
-        });
-    };
+    // Receive the full message history on connect
+    socket.on("messages", (msgs: Message[]) => {
+      setMessages(msgs);
+    });
 
-    fetchMessages(); // Initial fetch
+    // Receive new messages in real-time
+    socket.on("message", (msg: Message) => {
+      console.log("Received message:", msg);
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    // Request initial messages (optional, if server doesn't emit on connect)
+    socket.emit("messages");
 
     return () => {
-      if (timeout) clearTimeout(timeout); // Clear the timeout on unmount
+      socket.disconnect();
     };
   }, []);
 
@@ -42,7 +41,7 @@ function App() {
 
     if (!input.trim()) return;
 
-    return fetch("http://localhost:3000/messages", {
+    return fetch("http://localhost:8080/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: input }),
@@ -51,9 +50,23 @@ function App() {
       .catch((err) => console.error("Error sending message:", err));
   };
 
+  const testHttp = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/test");
+      if (!response.ok) {
+        throw new Error("HTTP test failed");
+      }
+      const data = await response.json();
+      window.alert(`HTTP test successful: ${data.message}`);
+    } catch (error) {
+      console.error("HTTP test error:", error);
+    }
+  };
+
+
   return (
     <main>
-      <h1>Long-Polling with Message Broker Demo</h1>
+      <h1>WebSockets (Socket.IO) Real-Time Messaging Demo</h1>
       <form onSubmit={sendMessage}>
         <input
           type="text"
@@ -66,10 +79,12 @@ function App() {
       <ul>
         {messages.map((m, i) => (
           <li key={i}>
-            [{new Date(m.time).toLocaleTimeString()}] {m.text}
+            [{new Date(m.time).toLocaleTimeString()}] {m.text}{" "}
+            {m.server ? `(${m.server})` : ""}
           </li>
         ))}
       </ul>
+      <button onClick={testHttp}>Test HTTP</button>
     </main>
   );
 }
