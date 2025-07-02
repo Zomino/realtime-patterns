@@ -1,7 +1,7 @@
-import cors from "cors";
-import dotenv from "dotenv";
-import express from "express";
-import { createClient } from "redis";
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import { createClient } from 'redis';
 
 dotenv.config();
 
@@ -13,8 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello, Express!");
+app.get('/', (req, res) => {
+  res.send('Hello, Express!');
 });
 
 interface Message {
@@ -24,10 +24,9 @@ interface Message {
 
 // In production, this would be replaced with a database to allow it to persist across server restarts and in a clustered environment.
 const messages: Message[] = [];
-const waitingClients: Array<{ res: express.Response; timer: NodeJS.Timeout }> =
-  [];
+const waitingClients: Array<{ res: express.Response; timer: NodeJS.Timeout }> = [];
 
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const pubClient = createClient({ url: redisUrl });
 const subClient = createClient({ url: redisUrl });
 
@@ -35,9 +34,9 @@ async function connectRedis() {
   try {
     await pubClient.connect();
     await subClient.connect();
-    console.log("Connected to Redis");
+    console.log('Connected to Redis');
   } catch (error) {
-    console.error("Error connecting to Redis:", error);
+    console.error('Error connecting to Redis:', error);
   }
 }
 
@@ -45,8 +44,8 @@ connectRedis()
   .then(() => {
     // For the sake of simplicity, we explicitly subscribe to the "new_message" channel.
     // In a production environment, we would separate the concerns of the message broker and the application logic that consumes messages.
-    subClient.subscribe("new_message", (message) => {
-      console.log("Received message:", message);
+    subClient.subscribe('new_message', (message) => {
+      console.log('Received message:', message);
 
       const msg: Message = JSON.parse(message);
 
@@ -54,7 +53,7 @@ connectRedis()
       // This is a simple check; in a real application, you might want to use a more robust method to ensure uniqueness.
       // For example, you could use a unique ID for each message.
       if (!messages.find((m) => m.text === msg.text && m.time === msg.time)) {
-        console.log("Adding new message to the list:", msg);
+        console.log('Adding new message to the list:', msg);
         messages.push(msg);
       }
 
@@ -68,10 +67,10 @@ connectRedis()
     });
   })
   .catch((error) => {
-    console.error("Error setting up Redis subscription:", error);
+    console.error('Error setting up Redis subscription:', error);
   });
 
-app.get("/messages", (req, res) => {
+app.get('/messages', (req, res) => {
   // In reality, this would check for new messages.
   if (messages.length > 0) {
     res.json({ messages }); // Respond immediately if there are any messages.
@@ -91,16 +90,16 @@ app.get("/messages", (req, res) => {
   waitingClients.push({ res, timer });
 });
 
-app.post("/messages", async (req, res) => {
+app.post('/messages', async (req, res) => {
   const msg = { text: req.body.message, time: new Date().toISOString() };
 
   messages.push(msg);
 
   // In local development, the subscriber and the publisher can be the same server instance.
   // In a load balanced production environment, they could be separate instances.
-  console.log("Publishing message:", msg);
+  console.log('Publishing message:', msg);
 
-  await pubClient.publish("new_message", JSON.stringify(msg));
+  await pubClient.publish('new_message', JSON.stringify(msg));
   res.sendStatus(201); // Created.
 });
 

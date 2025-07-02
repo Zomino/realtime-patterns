@@ -4,7 +4,7 @@
   "description": "A collection of real-time communication patterns in MERN apps.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
@@ -14,5 +14,8 @@
     "boilerplate/*",
     "long-polling/*",
     "polling/*"
-  ]
+  ],
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
 }
