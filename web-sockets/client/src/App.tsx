@@ -13,8 +13,8 @@ function App() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    // Connect to the Socket.IO server
-    const socket = io("http://localhost:3000");
+    // Connect to the Socket.IO server through the load-balancer
+    const socket = io("http://localhost:8080");
     socketRef.current = socket;
 
     // Receive the full message history on connect

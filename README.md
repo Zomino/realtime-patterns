@@ -2,9 +2,40 @@
 
 A collection of patterns for implementing real-time client-server communication.
 
+## Usage (for both examples)
+
+- **Install dependencies:**
+
+  ```sh
+  npm install
+  ```
+
+  (This is a monorepo workspace. Install all dependencies at once from the root)
+
+- **Start the server:**
+
+  ```sh
+  docker-compose up --build
+  ```
+
+  (Run this in the relevant example directory, e.g. `long-polling` or `web-sockets`)
+
+- **Start the client:**
+
+  ```sh
+  cd long-polling/client   # or cd web-sockets/client
+  npm run dev
+  ```
+
+- **Open the app:**
+  Visit the URL shown in your terminal (typically http://localhost:5173) in your browser.
+
+---
+
 ## Long-polling with Message Broker
 
 ### How It Works
+
 - The client sends and receives messages via HTTP requests.
 - The client opens a request to the server and waits for new messages or a timeout.
 - The server responds immediately if there are new messages, or holds the request open until new data arrives or a timeout occurs.
@@ -39,11 +70,13 @@ sequenceDiagram
 ```
 
 ### Pros
+
 - **Scalable in load-balanced environments:** Works across multiple server instances or services thanks to the message broker.
 - **Broad compatibility:** Works in all browsers and environments since it relies on standard HTTP requests.
 - **Redis use:** Redis offers other benefits (e.g. caching) that could be very useful for scaling data-intensive workloads.
 
 ### Cons
+
 - **Broker dependency:** Requires running and maintaining a message broker (e.g., Redis).
 - **Inefficient resource usage:** Most polling requests may return no new data.
 - **Not truly real-time:** Clients only receive updates at fixed intervals, introducing latency between data changes and client updates.
