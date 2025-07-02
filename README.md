@@ -1,6 +1,6 @@
 # realtime-patterns
 
-A collection of patterns for implementing real-time client-server communication.
+A couple of patterns for implementing real-time client-server communication.
 
 ## Usage (for both examples)
 
